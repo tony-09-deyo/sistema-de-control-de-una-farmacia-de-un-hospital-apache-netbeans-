@@ -1,0 +1,928 @@
+package sistema.de.control.de.farmacia.de.un.hospital;
+
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class SistemaDeControlDeFarmaciaDeUnHospital {
+    
+    // Estructuras para almacenar el inventario
+    static Map<String, ArrayList<Medicamento>> inventario = new HashMap<>();
+    static ArrayList<Movimiento> historialMovimientos = new ArrayList<>();
+    static Scanner scanner = new Scanner(System.in);
+    static String usuarioActual = "";
+    
+    public static void main(String[] args) {
+        System.out.println("Iniciando sistema...");
+        System.out.flush();
+        
+        inicializarInventario();
+        
+        int opcion;
+        boolean continuar = true;
+        
+        System.out.println("==============================================");
+        System.out.println("SISTEMA DE CONTROL DE FARMACIA DE UN HOSPITAL");
+        System.out.println("==============================================\n");
+        System.out.flush();
+        
+        // Registrar usuario al inicio
+        registrarUsuario();
+        
+        while (continuar) {
+            mostrarMenuPrincipal();
+            opcion = leerOpcion();
+            
+            switch (opcion) {
+                case 1 -> registrarMedicamento();
+                case 2 -> consultarInventario();
+                case 3 -> registrarSalidaMedicamento(); // NUEVA FUNCIÓN tipo MicroSIP
+                case 4 -> actualizarExistencia();
+                case 5 -> darDeBajaMedicamento();
+                case 6 -> generarReporte();
+                case 7 -> verHistorialMovimientos(); // NUEVA FUNCIÓN
+                case 8 -> {
+                    System.out.println("\n¡Gracias por usar el sistema!");
+                    System.out.println("Sesión cerrada correctamente.");
+                    continuar = false;
+                }
+                default -> System.out.println("\n❌ Opción inválida. Intente nuevamente.");
+            }
+            
+            if (continuar) {
+                System.out.println("\nPresione ENTER para continuar...");
+                scanner.nextLine();
+            }
+        }
+        
+        scanner.close();
+    }
+    
+    static void inicializarInventario() {
+        // Inicializar categorías según las imágenes
+        inventario.put("Medicamentos de uso general", new ArrayList<>());
+        inventario.put("Inyecciones y ampollas", new ArrayList<>());
+        inventario.put("Jarabes y Suspensiones", new ArrayList<>());
+        inventario.put("Sueros y Soluciones", new ArrayList<>());
+        inventario.put("Material de Curación", new ArrayList<>());
+        inventario.put("Antisépticos y desinfectantes", new ArrayList<>());
+        inventario.put("Otros insumos básicos", new ArrayList<>());
+        
+        // Agregar medicamentos con 50 unidades de existencia inicial
+        agregarMedicamentoInicial("Medicamentos de uso general", "Paracetamol", 500, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Ibuprofeno", 400, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Ácido acetilsalicílico (Aspirina)", 100, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Amoxicilina", 500, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Dicloxacilina", 500, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Metoclopramida", 10, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Naproxeno", 500, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Prednisona", 5, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Diazepam", 5, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Metformina", 850, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Losartan", 50, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Omeprazol", 20, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Loratadina", 10, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Clorfenamina", 4, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Salbutamol (Tabletas)", 4, "mg", 50);
+        agregarMedicamentoInicial("Medicamentos de uso general", "Ácido fólico", 5, "mg", 50);
+        
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Bencilpenicilina", 1000000, "U", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Ceftriaxona", 1, "g", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Diclofenaco sódico", 75, "mg", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Ketorolaco", 30, "mg/ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Dexametasona", 4, "mg/ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Solucion Glucosada al 5% (Ampolleta)", 5, "mg/ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Lidocaina 2%", 20, "mg/ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Furosemida", 20, "mg/2ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Metoclopramida", 10, "mg/2ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Omeprazol (Inyectable)", 40, "mg/ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Ranitidina", 50, "mg/2ml", 50);
+        agregarMedicamentoInicial("Inyecciones y ampollas", "Tramadol", 50, "mg/ml", 50);
+        agregarmedicamentoInicial("Inyecciones y ampollas", "Suero antitetanico", 50);
+        
+        agregarMedicamentoInicial("Jarabes y Suspensiones", "Paracetamol infantil", 160, "mg/5ml", 50);
+        agregarMedicamentoInicial("Jarabes y Suspensiones", "Amoxicilina Suspensión", 250, "mg/5ml", 50);
+        agregarMedicamentoInicial("Jarabes y Suspensiones", "Ambroxol jarabe", 15, "mg/5ml", 50);
+        agregarMedicamentoInicial("Jarabes y Suspensiones", "Loratadina jarabe", 5, "mg/5ml", 50);
+        agregarMedicamentoInicial("Jarabes y Suspenciones", "Ibuprofeno infantil", 20/40, "mg/ml", 50);
+        agregarMedicamentoInicial("Jarabes y Suspensiones", "Salbutamol jarabe", 2, "mg/5ml", 50);
+        
+        
+        agregarMedicamentoInicial("Sueros y Soluciones", "Solución fisiologica (Cloruro de sodio 0.9%)", 9, "mg/ml", 50);
+        agregarMedicamentoInicial("Sueros y Soluciones", "Solución glucosada al 5%", 50, "mg", 50);
+        agregarMedicamentoInicial("Sueros y Soluciones", "Solución Hartmann o Ringer Lactato", 0, "", 50);
+        agregarMedicamentoInicial("Sueros y Soluciones", "Suero oral", 0, "", 50);
+        agregarMedicamentoInicial("Sueros y Soluciones", "Agua destilada para inyección", 0, "", 50);
+        
+        agregarMedicamentoInicial("Material de Curación", "Gasas estériles", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Vendas elasticas", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Vendas de algodón", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Algodon absorbente", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Cinta micropore", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Tela adhesiva", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Apositos", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "guantes esteriles y no esteriles", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Cubrebocas", 0, "", 50);
+        agregarMedicamentoInicial("Material de Curación", "Jeringas (varias medidas)", 1/3/5/10/20, "ml", 50);
+        agregarMedicamentoInicial("Material de Curación", "Agujas hipodérmicas", 0, "", 50);
+        
+        agregarMedicamentoInicial("Antisépticos y desinfectantes", "Alcohol etílico al 70%", 0, "", 50);
+        agregarMedicamentoInicial("Antisépticos y desinfectantes", "Agua oxigenada", 0, "", 50);
+        agregarMedicamentoInicial("Antisépticos y desinfectantes", "Clorhexidina", 0, "", 50);
+        agregarMedicamentoInicial("Antisépticos y desinfectantes", "Yodo povidona", 0, "", 50);
+        agregarMedicamentoInicial("Antisépticos y desinfectantes", "Jabón quirúrgico", 0, "", 50);
+        
+        agregarMedicamentoInicial("Otros insumos básicos", "Termómetros digitales", 0, "", 50);
+        agregarMedicamentoInicial("Otros insumos básicos", "Esfigmomanómetros", 0, "", 50);
+        agregarMedicamentoInicial("Otros insumos básicos", "Guantes quiruricos", 0, "", 50);
+        agregarMedicamentoInicial("Otros insumos básicos", "Sondas nasogástricas", 0, "", 50);
+        agregarMedicamentoInicial("Otros insumos básicos", "Equipos quirúrgicos", 0, "", 50);
+        agregarMedicamentoInicial("Otros insumos básicos", "Bolsa para desechos biológicos", 0, "", 50);
+    }
+    
+    static void agregarMedicamentoInicial(String categoria, String nombre, int dosis, String unidad, int cantidad) {
+        Medicamento med = new Medicamento(nombre, categoria, dosis, unidad, cantidad);
+        inventario.get(categoria).add(med);
+    }
+    
+    static void registrarUsuario() {
+        System.out.println("\n--- REGISTRO DE USUARIO ---");
+        System.out.print("Nombre del usuario: ");
+        String nombre = scanner.nextLine();
+        usuarioActual = nombre;
+        System.out.print("Tipo de usuario (Médico/Enfermero/Administrador): ");
+        System.out.print("Número de identificación: ");
+        
+        System.out.println("\n✓ Usuario registrado exitosamente");
+        System.out.println("Bienvenido(a), " + nombre);
+    }
+    
+    static void mostrarMenuPrincipal() {
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║          MENÚ PRINCIPAL                ║");
+        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("1. Registrar medicamento nuevo");
+        System.out.println("2. Consultar inventario");
+        System.out.println("3. Registrar salida de medicamento 📋 [NUEVO]");
+        System.out.println("4. Actualizar existencia (dar de alta)");
+        System.out.println("5. Dar de baja medicamento");
+        System.out.println("6. Generar reporte");
+        System.out.println("7. Ver historial de movimientos 📊 [NUEVO]");
+        System.out.println("8. Salir");
+        System.out.print("\nSeleccione una opción: ");
+    }
+    
+    static int leerOpcion() {
+        try {
+            int opcion = Integer.parseInt(scanner.nextLine());
+            return opcion;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+    
+    // ============= NUEVA FUNCIÓN: REGISTRAR SALIDA DE MEDICAMENTO =============
+    static void registrarSalidaMedicamento() {
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║         REGISTRAR SALIDA DE MEDICAMENTO                    ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        System.out.println("\nSeleccione la categoría:");
+        String[] categorias = inventario.keySet().toArray(new String[0]);
+        for (int i = 0; i < categorias.length; i++) {
+            System.out.println((i + 1) + ". " + categorias[i]);
+        }
+        
+        System.out.print("\nCategoría (1-" + categorias.length + "): ");
+        int catIndex = leerOpcion() - 1;
+        
+        if (catIndex < 0 || catIndex >= categorias.length) {
+            System.out.println("❌ Categoría inválida");
+            return;
+        }
+        
+        String categoria = categorias[catIndex];
+        ArrayList<Medicamento> medicamentos = inventario.get(categoria);
+        
+        if (medicamentos.isEmpty()) {
+            System.out.println("❌ No hay medicamentos en esta categoría");
+            return;
+        }
+        
+        // Mostrar lista de medicamentos con existencias
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║  " + categoria.toUpperCase());
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        for (int i = 0; i < medicamentos.size(); i++) {
+            Medicamento m = medicamentos.get(i);
+            String stockInfo = m.getCantidad() <= 10 ? " ⚠️ STOCK BAJO" : " ✓";
+            System.out.printf("%d. %s - %d%s | Existencia: %d unidades%s\n", 
+                i + 1, m.getNombre(), m.getDosis(), m.getUnidad(), m.getCantidad(), stockInfo);
+        }
+        
+        System.out.print("\nSeleccione el medicamento (1-" + medicamentos.size() + "): ");
+        int medIndex = leerOpcion() - 1;
+        
+        if (medIndex < 0 || medIndex >= medicamentos.size()) {
+            System.out.println("❌ Medicamento inválido");
+            return;
+        }
+        
+        Medicamento medicamentoSeleccionado = medicamentos.get(medIndex);
+        
+        // Mostrar detalles del medicamento seleccionado
+        System.out.println("\n┌─────────────────────────────────────────────────────────┐");
+        System.out.println("│ MEDICAMENTO SELECCIONADO:");
+        System.out.println("│ " + medicamentoSeleccionado.getNombre());
+        System.out.println("│ Dosis: " + medicamentoSeleccionado.getDosis() + medicamentoSeleccionado.getUnidad());
+        System.out.println("│ EXISTENCIA ACTUAL: " + medicamentoSeleccionado.getCantidad() + " unidades");
+        System.out.println("└─────────────────────────────────────────────────────────┘");
+        
+        if (medicamentoSeleccionado.getCantidad() <= 0) {
+            System.out.println("\n❌ ERROR: No hay existencias de este medicamento");
+            System.out.println("Debe realizar una entrada antes de poder dispensar.");
+            return;
+        }
+        
+        System.out.print("\n¿Cantidad a dispensar?: ");
+        int cantidadSalida = leerOpcion();
+        
+        if (cantidadSalida <= 0) {
+            System.out.println("❌ Cantidad inválida");
+            return;
+        }
+        
+        if (cantidadSalida > medicamentoSeleccionado.getCantidad()) {
+            System.out.println("\n❌ ERROR: Cantidad insuficiente en inventario");
+            System.out.println("Solicitado: " + cantidadSalida + " | Disponible: " + medicamentoSeleccionado.getCantidad());
+            return;
+        }
+        
+        // Pedir datos adicionales
+        System.out.print("Nombre del paciente o área: ");
+        String paciente = scanner.nextLine();
+        
+        System.out.print("Médico que prescribe (opcional): ");
+        String medico = scanner.nextLine();
+        
+        System.out.print("Observaciones (opcional): ");
+        String observaciones = scanner.nextLine();
+        
+        // Confirmar la operación
+        System.out.println("\n┌─────────────────────────────────────────────────────────┐");
+        System.out.println("│ RESUMEN DE SALIDA:");
+        System.out.println("│ Medicamento: " + medicamentoSeleccionado.getNombre());
+        System.out.println("│ Cantidad: " + cantidadSalida + " unidades");
+        System.out.println("│ Paciente/Área: " + paciente);
+        System.out.println("│ Existencia actual: " + medicamentoSeleccionado.getCantidad());
+        System.out.println("│ Nueva existencia: " + (medicamentoSeleccionado.getCantidad() - cantidadSalida));
+        System.out.println("└─────────────────────────────────────────────────────────┘");
+        
+        System.out.print("\n¿Confirmar salida? (si/no): ");
+        String confirmacion = scanner.nextLine().toLowerCase();
+        
+        if (confirmacion.equals("si") || confirmacion.equals("sí")) {
+            // Actualizar existencia
+            int existenciaAnterior = medicamentoSeleccionado.getCantidad();
+            medicamentoSeleccionado.setCantidad(existenciaAnterior - cantidadSalida);
+            
+            // Registrar movimiento en el historial
+            Movimiento mov = new Movimiento(
+                "SALIDA",
+                medicamentoSeleccionado.getNombre(),
+                categoria,
+                cantidadSalida,
+                existenciaAnterior,
+                medicamentoSeleccionado.getCantidad(),
+                usuarioActual,
+                paciente,
+                medico,
+                observaciones
+            );
+            historialMovimientos.add(mov);
+            
+            System.out.println("\n✓✓✓ SALIDA REGISTRADA EXITOSAMENTE ✓✓✓");
+            System.out.println("Nueva existencia: " + medicamentoSeleccionado.getCantidad() + " unidades");
+            
+            if (medicamentoSeleccionado.getCantidad() <= 10) {
+                System.out.println("\n⚠️⚠️⚠️ ALERTA: STOCK BAJO ⚠️⚠️⚠️");
+                System.out.println("Es necesario reabastecer este medicamento.");
+            }
+            
+            if (medicamentoSeleccionado.getCantidad() == 0) {
+                System.out.println("\n🚨 CRÍTICO: Medicamento AGOTADO 🚨");
+            }
+        } else {
+            System.out.println("\n❌ Operación cancelada");
+        }
+    }
+    
+    // ============= NUEVA FUNCIÓN: VER HISTORIAL DE MOVIMIENTOS =============
+    static void verHistorialMovimientos() {
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║            HISTORIAL DE MOVIMIENTOS                        ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        if (historialMovimientos.isEmpty()) {
+            System.out.println("\nNo hay movimientos registrados.");
+            return;
+        }
+        
+        System.out.println("\nOpciones:");
+        System.out.println("1. Ver últimos 10 movimientos");
+        System.out.println("2. Ver todos los movimientos");
+        System.out.println("3. Filtrar por medicamento");
+        System.out.print("\nSeleccione opción: ");
+        
+        int opcion = leerOpcion();
+        
+        switch (opcion) {
+            case 1 -> mostrarUltimosMovimientos(10);
+            case 2 -> mostrarTodosMovimientos();
+            case 3 -> filtrarMovimientosPorMedicamento();
+            default -> System.out.println("❌ Opción inválida");
+        }
+    }
+    
+    static void mostrarUltimosMovimientos(int cantidad) {
+        int inicio = Math.max(0, historialMovimientos.size() - cantidad);
+        System.out.println("\n--- ÚLTIMOS " + cantidad + " MOVIMIENTOS ---");
+        
+        for (int i = historialMovimientos.size() - 1; i >= inicio; i--) {
+            Movimiento m = historialMovimientos.get(i);
+            System.out.println("\n" + (historialMovimientos.size() - i) + ". " + m.toString());
+        }
+    }
+    
+    static void mostrarTodosMovimientos() {
+        System.out.println("\n--- TODOS LOS MOVIMIENTOS ---");
+        
+        for (int i = historialMovimientos.size() - 1; i >= 0; i--) {
+            Movimiento m = historialMovimientos.get(i);
+            System.out.println("\n" + (historialMovimientos.size() - i) + ". " + m.toString());
+        }
+    }
+    
+    static void filtrarMovimientosPorMedicamento() {
+        System.out.print("\nIngrese el nombre del medicamento: ");
+        String nombre = scanner.nextLine().toLowerCase();
+        
+        boolean encontrado = false;
+        
+        System.out.println("\n--- MOVIMIENTOS DE: " + nombre.toUpperCase() + " ---");
+        
+        for (int i = historialMovimientos.size() - 1; i >= 0; i--) {
+            Movimiento m = historialMovimientos.get(i);
+            if (m.getMedicamento().toLowerCase().contains(nombre)) {
+                System.out.println("\n" + m.toString());
+                encontrado = true;
+            }
+        }
+        
+        if (!encontrado) {
+            System.out.println("No se encontraron movimientos para este medicamento.");
+        }
+    }
+    
+    static void registrarMedicamento() {
+        System.out.println("\n--- REGISTRAR NUEVO MEDICAMENTO ---");
+        
+        System.out.println("\nCategorías disponibles:");
+        String[] categorias = inventario.keySet().toArray(new String[0]);
+        for (int i = 0; i < categorias.length; i++) {
+            System.out.println((i + 1) + ". " + categorias[i]);
+        }
+        
+        System.out.print("\nSeleccione categoría (1-" + categorias.length + "): ");
+        int catIndex = leerOpcion() - 1;
+        
+        if (catIndex < 0 || catIndex >= categorias.length) {
+            System.out.println("❌ Categoría inválida");
+            return;
+        }
+        
+        String categoria = categorias[catIndex];
+        
+        System.out.print("Nombre del medicamento: ");
+        String nombre = scanner.nextLine();
+        
+        System.out.print("Tipo (Pastillas, Tabletas, Cápsulas, etc.): ");
+        String tipo = scanner.nextLine();
+        
+        System.out.print("Dosis (número): ");
+        int dosis = leerOpcion();
+        
+        System.out.print("Unidad (mg, ml, g, U, etc.): ");
+        String unidad = scanner.nextLine();
+        
+        System.out.print("Cantidad inicial en stock [predeterminado: 50]: ");
+        String cantidadStr = scanner.nextLine();
+        int cantidad = cantidadStr.isEmpty() ? 50 : Integer.parseInt(cantidadStr);
+        
+        System.out.print("Lote: ");
+        String lote = scanner.nextLine();
+        
+        System.out.print("Fecha de caducidad (dd/mm/aaaa): ");
+        String fechaCad = scanner.nextLine();
+        
+        System.out.print("Proveedor: ");
+        String proveedor = scanner.nextLine();
+        
+        Medicamento med = new Medicamento(nombre, categoria, dosis, unidad, cantidad);
+        med.setTipo(tipo);
+        med.setLote(lote);
+        med.setFechaCaducidad(fechaCad);
+        med.setProveedor(proveedor);
+        
+        inventario.get(categoria).add(med);
+        
+        // Registrar movimiento
+        Movimiento mov = new Movimiento(
+            "REGISTRO NUEVO",
+            nombre,
+            categoria,
+            cantidad,
+            0,
+            cantidad,
+            usuarioActual,
+            "N/A",
+            "",
+            "Nuevo medicamento agregado al sistema"
+        );
+        historialMovimientos.add(mov);
+        
+        System.out.println("\n✓ Medicamento registrado exitosamente en: " + categoria);
+        System.out.println("Existencia inicial: " + cantidad + " unidades");
+    }
+    
+    static void consultarInventario() {
+        System.out.println("\n--- CONSULTAR INVENTARIO ---");
+        
+        System.out.println("\nOpciones de consulta:");
+        System.out.println("1. Ver todo el inventario");
+        System.out.println("2. Ver por categoría");
+        System.out.println("3. Buscar medicamento específico");
+        System.out.print("\nSeleccione opción: ");
+        
+        int opcion = leerOpcion();
+        
+        switch (opcion) {
+            case 1 -> mostrarTodoInventario();
+            case 2 -> consultarPorCategoria();
+            case 3 -> buscarMedicamento();
+            default -> System.out.println("❌ Opción inválida");
+        }
+    }
+    
+    static void mostrarTodoInventario() {
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║               INVENTARIO COMPLETO                          ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        for (Map.Entry<String, ArrayList<Medicamento>> entry : inventario.entrySet()) {
+            String categoria = entry.getKey();
+            ArrayList<Medicamento> medicamentos = entry.getValue();
+            
+            if (!medicamentos.isEmpty()) {
+                System.out.println("\n>>> " + categoria.toUpperCase() + " <<<");
+                System.out.println("─────────────────────────────────────────────────────────────");
+                
+                for (int i = 0; i < medicamentos.size(); i++) {
+                    Medicamento m = medicamentos.get(i);
+                    String alerta = m.getCantidad() <= 10 ? " ⚠️" : "";
+                    System.out.printf("%d. %s - %d%s | Existencia: %d unidades%s\n", 
+                        i + 1, m.getNombre(), m.getDosis(), m.getUnidad(), m.getCantidad(), alerta);
+                }
+            }
+        }
+    }
+    
+    static void consultarPorCategoria() {
+        System.out.println("\nCategorías disponibles:");
+        String[] categorias = inventario.keySet().toArray(new String[0]);
+        for (int i = 0; i < categorias.length; i++) {
+            System.out.println((i + 1) + ". " + categorias[i]);
+        }
+        
+        System.out.print("\nSeleccione categoría: ");
+        int catIndex = leerOpcion() - 1;
+        
+        if (catIndex < 0 || catIndex >= categorias.length) {
+            System.out.println("❌ Categoría inválida");
+            return;
+        }
+        
+        String categoria = categorias[catIndex];
+        ArrayList<Medicamento> medicamentos = inventario.get(categoria);
+        
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║  " + categoria.toUpperCase());
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        if (medicamentos.isEmpty()) {
+            System.out.println("No hay medicamentos en esta categoría");
+        } else {
+            for (int i = 0; i < medicamentos.size(); i++) {
+                Medicamento m = medicamentos.get(i);
+                String alerta = m.getCantidad() <= 10 ? " ⚠️ STOCK BAJO" : "";
+                System.out.printf("%d. %s - %d%s | Existencia: %d unidades%s\n", 
+                    i + 1, m.getNombre(), m.getDosis(), m.getUnidad(), m.getCantidad(), alerta);
+            }
+        }
+    }
+    
+    static void buscarMedicamento() {
+        System.out.print("\nIngrese el nombre del medicamento: ");
+        String nombre = scanner.nextLine().toLowerCase();
+        
+        boolean encontrado = false;
+        
+        for (Map.Entry<String, ArrayList<Medicamento>> entry : inventario.entrySet()) {
+            String categoria = entry.getKey();
+            ArrayList<Medicamento> medicamentos = entry.getValue();
+            
+            for (Medicamento m : medicamentos) {
+                if (m.getNombre().toLowerCase().contains(nombre)) {
+                    if (!encontrado) {
+                        System.out.println("\n--- RESULTADOS DE BÚSQUEDA ---");
+                        encontrado = true;
+                    }
+                    System.out.println("\n✓ Encontrado:");
+                    System.out.println("  Nombre: " + m.getNombre());
+                    System.out.println("  Categoría: " + categoria);
+                    System.out.println("  Dosis: " + m.getDosis() + m.getUnidad());
+                    System.out.println("  Existencia: " + m.getCantidad() + " unidades");
+                    if (m.getLote() != null) System.out.println("  Lote: " + m.getLote());
+                    if (m.getFechaCaducidad() != null) System.out.println("  Caducidad: " + m.getFechaCaducidad());
+                }
+            }
+        }
+        
+        if (!encontrado) {
+            System.out.println("❌ No se encontró el medicamento");
+        }
+    }
+    
+    static void actualizarExistencia() {
+        System.out.println("\n--- ACTUALIZAR EXISTENCIA (DAR DE ALTA) ---");
+        
+        System.out.print("Ingrese el nombre del medicamento: ");
+        String nombre = scanner.nextLine();
+        
+        Medicamento medicamento = buscarMedicamentoPorNombre(nombre);
+        
+        if (medicamento != null) {
+            System.out.println("\nMedicamento encontrado: " + medicamento.getNombre());
+            System.out.println("Existencia actual: " + medicamento.getCantidad() + " unidades");
+            
+            System.out.print("\nCantidad a agregar (dar de alta): ");
+            int cantidadAgregar = leerOpcion();
+            
+            if (cantidadAgregar > 0) {
+                int existenciaAnterior = medicamento.getCantidad();
+                medicamento.setCantidad(existenciaAnterior + cantidadAgregar);
+                
+                // Registrar movimiento
+                Movimiento mov = new Movimiento(
+                    "ENTRADA",
+                    medicamento.getNombre(),
+                    medicamento.getCategoria(),
+                    cantidadAgregar,
+                    existenciaAnterior,
+                    medicamento.getCantidad(),
+                    usuarioActual,
+                    "N/A",
+                    "",
+                    "Entrada por reabastecimiento"
+                );
+                historialMovimientos.add(mov);
+                
+                System.out.println("\n✓ Stock actualizado exitosamente");
+                System.out.println("Nueva existencia: " + medicamento.getCantidad() + " unidades");
+                
+                // Opciones adicionales del diagrama
+                System.out.print("\n¿Desea actualizar datos adicionales? (si/no): ");
+                String respuesta = scanner.nextLine().toLowerCase();
+                
+                if (respuesta.equals("si") || respuesta.equals("sí")) {
+                    System.out.print("Nuevo lote (Enter para omitir): ");
+                    String lote = scanner.nextLine();
+                    if (!lote.isEmpty()) medicamento.setLote(lote);
+                    
+                    System.out.print("Nueva fecha de caducidad (Enter para omitir): ");
+                    String fecha = scanner.nextLine();
+                    if (!fecha.isEmpty()) medicamento.setFechaCaducidad(fecha);
+                    
+                    System.out.print("Actualizar proveedor (Enter para omitir): ");
+                    String prov = scanner.nextLine();
+                    if (!prov.isEmpty()) medicamento.setProveedor(prov);
+                }
+            } else {
+                System.out.println("❌ Cantidad inválida");
+            }
+        } else {
+            System.out.println("❌ Medicamento no encontrado");
+        }
+    }
+    
+    static void darDeBajaMedicamento() {
+        System.out.println("\n--- DAR DE BAJA MEDICAMENTO ---");
+        
+        System.out.println("\nOpciones:");
+        System.out.println("1. Reducir cantidad (merma/caducidad)");
+        System.out.println("2. Eliminar medicamento completamente");
+        System.out.print("\nSeleccione opción: ");
+        
+        int opcion = leerOpcion();
+        
+        switch (opcion) {
+            case 1 -> reducirCantidad();
+            case 2 -> eliminarMedicamento();
+            default -> System.out.println("❌ Opción inválida");
+        }
+    }
+    
+    static void reducirCantidad() {
+        System.out.print("\nIngrese el nombre del medicamento: ");
+        String nombre = scanner.nextLine();
+        
+        Medicamento medicamento = buscarMedicamentoPorNombre(nombre);
+        
+        if (medicamento != null) {
+            System.out.println("\nMedicamento encontrado: " + medicamento.getNombre());
+            System.out.println("Existencia actual: " + medicamento.getCantidad() + " unidades");
+            
+            System.out.print("\nCantidad a dar de baja: ");
+            int cantidadBaja = leerOpcion();
+            
+            if (cantidadBaja > 0 && cantidadBaja <= medicamento.getCantidad()) {
+                System.out.print("Motivo de baja (caducidad/merma/dañado): ");
+                String motivo = scanner.nextLine();
+                
+                int existenciaAnterior = medicamento.getCantidad();
+                medicamento.setCantidad(existenciaAnterior - cantidadBaja);
+                
+                // Registrar movimiento
+                Movimiento mov = new Movimiento(
+                    "BAJA",
+                    medicamento.getNombre(),
+                    medicamento.getCategoria(),
+                    cantidadBaja,
+                    existenciaAnterior,
+                    medicamento.getCantidad(),
+                    usuarioActual,
+                    "N/A",
+                    "",
+                    "Motivo: " + motivo
+                );
+                historialMovimientos.add(mov);
+                
+                System.out.println("\n✓ Baja registrada exitosamente");
+                System.out.println("Nueva existencia: " + medicamento.getCantidad() + " unidades");
+                
+                if (medicamento.getCantidad() <= 10) {
+                    System.out.println("\n⚠️  ALERTA: Stock bajo. Considere realizar un nuevo pedido.");
+                }
+            } else {
+                System.out.println("❌ Cantidad inválida o insuficiente stock");
+            }
+        } else {
+            System.out.println("❌ Medicamento no encontrado");
+        }
+    }
+    
+    static void eliminarMedicamento() {
+        System.out.print("\nIngrese el nombre del medicamento a eliminar: ");
+        String nombre = scanner.nextLine();
+        
+        boolean eliminado = false;
+        
+        for (Map.Entry<String, ArrayList<Medicamento>> entry : inventario.entrySet()) {
+            String categoria = entry.getKey();
+            ArrayList<Medicamento> medicamentos = entry.getValue();
+            
+            for (int i = 0; i < medicamentos.size(); i++) {
+                if (medicamentos.get(i).getNombre().equalsIgnoreCase(nombre)) {
+                    System.out.print("\n¿Está seguro de eliminar " + nombre + "? (si/no): ");
+                    String confirmacion = scanner.nextLine().toLowerCase();
+                    
+                    if (confirmacion.equals("si") || confirmacion.equals("sí")) {
+                        Medicamento med = medicamentos.get(i);
+                        
+                        // Registrar movimiento
+                        Movimiento mov = new Movimiento(
+                            "ELIMINADO",
+                            med.getNombre(),
+                            categoria,
+                            med.getCantidad(),
+                            med.getCantidad(),
+                            0,
+                            usuarioActual,
+                            "N/A",
+                            "",
+                            "Medicamento eliminado del sistema"
+                        );
+                        historialMovimientos.add(mov);
+                        
+                        medicamentos.remove(i);
+                        System.out.println("\n✓ Medicamento eliminado del sistema");
+                        eliminado = true;
+                    } else {
+                        System.out.println("Operación cancelada");
+                    }
+                    break;
+                }
+            }
+            if (eliminado) break;
+        }
+        
+        if (!eliminado) {
+            System.out.println("❌ Medicamento no encontrado");
+        }
+    }
+    
+    static void generarReporte() {
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║                  REPORTE DE INVENTARIO                     ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        
+        int totalMedicamentos = 0;
+        int totalUnidades = 0;
+        int medicamentosStockBajo = 0;
+        int medicamentosAgotados = 0;
+        
+        for (Map.Entry<String, ArrayList<Medicamento>> entry : inventario.entrySet()) {
+            String categoria = entry.getKey();
+            ArrayList<Medicamento> medicamentos = entry.getValue();
+            
+            int unidadesCategoria = 0;
+            
+            if (!medicamentos.isEmpty()) {
+                System.out.println("\n>>> " + categoria.toUpperCase());
+                System.out.println("─────────────────────────────────────────────────────────────");
+                
+                for (Medicamento m : medicamentos) {
+                    totalMedicamentos++;
+                    totalUnidades += m.getCantidad();
+                    unidadesCategoria += m.getCantidad();
+                    
+                    String alerta = "";
+                    if (m.getCantidad() == 0) {
+                        alerta = " 🚨 AGOTADO";
+                        medicamentosAgotados++;
+                    } else if (m.getCantidad() <= 10) {
+                        alerta = " ⚠️ STOCK BAJO";
+                        medicamentosStockBajo++;
+                    }
+                    
+                    System.out.printf("  • %s - %d%s | Existencia: %d%s\n", 
+                        m.getNombre(), m.getDosis(), m.getUnidad(), m.getCantidad(), alerta);
+                }
+                
+                System.out.println("  Subtotal categoría: " + unidadesCategoria + " unidades");
+            }
+        }
+        
+        System.out.println("\n╔════════════════════════════════════════════════════════════╗");
+        System.out.println("║                     RESUMEN GENERAL                        ║");
+        System.out.println("╚════════════════════════════════════════════════════════════╝");
+        System.out.println("Total de medicamentos diferentes: " + totalMedicamentos);
+        System.out.println("Total de unidades en inventario: " + totalUnidades);
+        System.out.println("Medicamentos con stock bajo (≤10): " + medicamentosStockBajo);
+        System.out.println("Medicamentos agotados: " + medicamentosAgotados);
+        System.out.println("Movimientos registrados: " + historialMovimientos.size());
+        
+        if (medicamentosAgotados > 0) {
+            System.out.println("\n🚨 CRÍTICO: " + medicamentosAgotados + " medicamento(s) AGOTADO(S)");
+        }
+        if (medicamentosStockBajo > 0) {
+            System.out.println("⚠️  ACCIÓN REQUERIDA: " + medicamentosStockBajo + " medicamento(s) requiere(n) reabastecimiento");
+        }
+        
+        System.out.println("\nFin del reporte");
+    }
+    
+    static Medicamento buscarMedicamentoPorNombre(String nombre) {
+        for (ArrayList<Medicamento> medicamentos : inventario.values()) {
+            for (Medicamento m : medicamentos) {
+                if (m.getNombre().equalsIgnoreCase(nombre)) {
+                    return m;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void agregarMedicamentoInicial(String medicamentos_de_uso_general) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    private static void agregarmedicamentoInicial(String inyecciones_y_ampollas, String suero_antitetanico, int i) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+}
+
+// Clase Medicamento
+class Medicamento {
+    private final String nombre;
+    private final String categoria;
+    private final int dosis;
+    private final String unidad;
+    private int cantidad;
+    private String tipo;
+    private String lote;
+    private String fechaCaducidad;
+    private String proveedor;
+    
+    public Medicamento(String nombre, String categoria, int dosis, String unidad, int cantidad) {
+        this.nombre = nombre;
+        this.categoria = categoria;
+        this.dosis = dosis;
+        this.unidad = unidad;
+        this.cantidad = cantidad;
+    }
+    
+    // Getters
+    public String getNombre() { return nombre; }
+    public String getCategoria() { return categoria; }
+    public int getDosis() { return dosis; }
+    public String getUnidad() { return unidad; }
+    public int getCantidad() { return cantidad; }
+    public String getTipo() { return tipo; }
+    public String getLote() { return lote; }
+    public String getFechaCaducidad() { return fechaCaducidad; }
+    public String getProveedor() { return proveedor; }
+    
+    // Setters
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+    public void setLote(String lote) { this.lote = lote; }
+    public void setFechaCaducidad(String fechaCaducidad) { this.fechaCaducidad = fechaCaducidad; }
+    public void setProveedor(String proveedor) { this.proveedor = proveedor; }
+}
+
+// Clase Movimiento para historial
+class Movimiento {
+    private final String tipo; // ENTRADA, SALIDA, BAJA, ELIMINADO, REGISTRO NUEVO
+    private final String medicamento;
+    private final String categoria;
+    private final int cantidad;
+    private final int existenciaAnterior;
+    private final int existenciaNueva;
+    private final String usuario;
+    private final String pacienteArea;
+    private final String medico;
+    private final String observaciones;
+    private final String fechaHora;
+    
+    public Movimiento(String tipo, String medicamento, String categoria, int cantidad, 
+                      int existenciaAnterior, int existenciaNueva, String usuario,
+                      String pacienteArea, String medico, String observaciones) {
+        this.tipo = tipo;
+        this.medicamento = medicamento;
+        this.categoria = categoria;
+        this.cantidad = cantidad;
+        this.existenciaAnterior = existenciaAnterior;
+        this.existenciaNueva = existenciaNueva;
+        this.usuario = usuario;
+        this.pacienteArea = pacienteArea;
+        this.medico = medico;
+        this.observaciones = observaciones;
+        
+        // Fecha y hora actual
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        this.fechaHora = dtf.format(LocalDateTime.now());
+    }
+    
+    public String getMedicamento() { return medicamento; }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("┌───────────────────────────────────────────────┐\n");
+        sb.append("│ TIPO: ").append(tipo).append("\n");
+        sb.append("│ Fecha: ").append(fechaHora).append("\n");
+        sb.append("│ Usuario: ").append(usuario).append("\n");
+        sb.append("│ ──────────────────────────────────────────\n");
+        sb.append("│ Medicamento: ").append(medicamento).append("\n");
+        sb.append("│ Categoría: ").append(categoria).append("\n");
+        sb.append("│ Cantidad: ").append(cantidad).append(" unidades\n");
+        sb.append("│ Existencia anterior: ").append(existenciaAnterior).append("\n");
+        sb.append("│ Existencia nueva: ").append(existenciaNueva).append("\n");
+        if (!pacienteArea.equals("N/A")) {
+            sb.append("│ Paciente/Área: ").append(pacienteArea).append("\n");
+        }
+        if (medico != null && !medico.isEmpty()) {
+            sb.append("│ Médico: ").append(medico).append("\n");
+        }
+        if (observaciones != null && !observaciones.isEmpty()) {
+            sb.append("│ Observaciones: ").append(observaciones).append("\n");
+        }
+        sb.append("└───────────────────────────────────────────────┘");
+        return sb.toString();
+    }
+}
